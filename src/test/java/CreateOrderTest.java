@@ -7,26 +7,33 @@ import org.junit.Before;
 import org.junit.Test;
 import praktikum.LoginUser;
 import praktikum.CreateOrder;
+import praktikum.AdressClass;
 
 import java.util.Random;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
-
 public class CreateOrderTest {
 
-    String token;
+    private String token;
     Random random = new Random();
-    String email = "something" + random.nextInt(10000000) + "@yandex.ru";
-    String password = "aaa" + random.nextInt(10000000);
-    String name = "uuu" + random.nextInt(10000000);
+    private final String email = "something" + random.nextInt(10000000) + "@yandex.ru";
+    private final String password = "aaa" + random.nextInt(10000000);
+    private final String name = "uuu" + random.nextInt(10000000);
+    private final String ingredientsReal = "61c0c5a71d1f82001bdaaa6d";
+    private final String ingredientsUnReal = "78946";
+    private final int expectedCodeForOk = 200;
+    private final int expectedCodeForSetOver = 202;
+    private final int expectedCodeForTestByInvalidHas = 500;
+    private final int expectedCodeForTestWOBody = 400;
+
 
     @Before
     public void setUp() {
         // повторяющуюся для разных ручек часть URL лучше записать в переменную в методе Before
         // если в классе будет несколько тестов, указывать её придётся только один раз
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
+        RestAssured.baseURI = AdressClass.baseAdress;
         LoginUser loginUser = new LoginUser(email, password, name);
         // перед началом теста необходимо заполнение уникальными значениями для login password name
         token = given()
@@ -34,10 +41,10 @@ public class CreateOrderTest {
                 .and()
                 .body(loginUser)
                 .when()
-                .post("/api/auth/register")
+                .post(AdressClass.regUrl)
                 .then()
                 .log().all()
-                .statusCode(200)
+                .statusCode(expectedCodeForOk)
                 .extract()
                 .body()
                 .path("accessToken");
@@ -48,59 +55,55 @@ public class CreateOrderTest {
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
-                        .delete("/api/auth/user");
-        response.then().statusCode(202);
+                        .oauth2(token.replace("Bearer ", ""))
+                        .delete(AdressClass.regUser);
+        response.then().statusCode(expectedCodeForSetOver);
     }
 
     @Test
     @DisplayName("createOrderTestOk") // имя теста
     @Description("Order - create on API with accessToken") // описание теста
     public void createOrderTestOk() {
-        token = token.replace("Bearer ", "");
-        CreateOrder createOrder = new CreateOrder("61c0c5a71d1f82001bdaaa6d");
+        CreateOrder createOrder = new CreateOrder(ingredientsReal);
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
+                        .oauth2(token.replace("Bearer ", ""))
                         .headers("Content-Type", "application/json")
                         .body(createOrder)
-                        .post("/api/orders");
+                        .post(AdressClass.regOrders);
         response.then().assertThat().body("success", equalTo(true))
                 .and()
-                .statusCode(200);
+                .statusCode(expectedCodeForOk);
     }
 
     @Test
     @DisplayName("createOrderTestByInvalidHash") // имя теста
     @Description("Order - create on API with accessToken with invalid hash") // описание теста
     public void createOrderTestByInvalidHash() {
-        token = token.replace("Bearer ", "");
-        CreateOrder createOrder = new CreateOrder("78946");
+        CreateOrder createOrder = new CreateOrder(ingredientsUnReal);
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
+                        .oauth2(token.replace("Bearer ", ""))
                         .headers("Content-Type", "application/json")
                         .body(createOrder)
-                        .post("/api/orders");
-        response.then().statusCode(500);
+                        .post(AdressClass.regOrders);
+        response.then().statusCode(expectedCodeForTestByInvalidHas);
     }
 
     @Test
     @DisplayName("createOrderTestWOBody") // имя теста
     @Description("Order - create on API with accessToken but with out ingredients") // описание теста
     public void createOrderTestWOBody() {
-        token = token.replace("Bearer ", "");
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
+                        .oauth2(token.replace("Bearer ", ""))
                         .headers("Content-Type", "application/json")
-                        .post("/api/orders");
+                        .post(AdressClass.regOrders);
         response.then().assertThat().body("success", equalTo(false))
                 .and()
-                .statusCode(400);
+                .statusCode(expectedCodeForTestWOBody);
     }
 }
-

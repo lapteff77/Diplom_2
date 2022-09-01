@@ -23,10 +23,10 @@ public class RegisteredUserDataCorrectTest {
     private final String theNewEmail = "rumpel234@pochta.net";
     private final String theNewPassword = "4657890";
 
-    private final int expectedCodeForOk =200;
-    private final int expectedCodeForSetOver =202;
-    private final int expectedCodeForDoublesMailTest =403;
-    private final int expectedCodeForUnregisterUserTest =401;
+    private final int expectedCodeForOk = 200;
+    private final int expectedCodeForSetOver = 202;
+    private final int expectedCodeForDoublesMailTest = 403;
+    private final int expectedCodeForUnregisterUserTest = 401;
 
 
     @Before

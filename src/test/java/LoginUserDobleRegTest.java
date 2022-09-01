@@ -15,8 +15,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 public class LoginUserDobleRegTest {
     private String token;
-    private final int expectedCodeForOk =200;
-    private final int expectedCodeForSetOver =202;
+    private final int expectedCodeForOk = 200;
+    private final int expectedCodeForSetOver = 202;
     private final int expectedCodeForTest = 403;
     Random random = new Random();
     private final String email = "something" + random.nextInt(10000000) + "@yandex.ru";
@@ -66,6 +66,6 @@ public class LoginUserDobleRegTest {
                         .post(AdressClass.regUrl);
         response.then().assertThat().body("message", equalTo("User already exists"))
                 .and()
-                .statusCode(expectedCodeForTest );
+                .statusCode(expectedCodeForTest);
     }
 }
