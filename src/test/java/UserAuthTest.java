@@ -5,6 +5,7 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import praktikum.AdressClass;
 import praktikum.LoginUser;
 
 import java.util.Random;
@@ -14,27 +15,32 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 public class UserAuthTest {
 
-    String token;
+    private String token;
     Random random = new Random();
-    String email = "something" + random.nextInt(10000000) + "@yandex.ru";
-    String password = "aaa" + random.nextInt(10000000);
-    String name = "uuu" + random.nextInt(10000000);
+    private final String email = "something" + random.nextInt(10000000) + "@yandex.ru";
+    private final String password = "aaa" + random.nextInt(10000000);
+    private final String name = "uuu" + random.nextInt(10000000);
+    private final String unCorrectEmail = "timba@mail.com";
+    private final String unCorrectPassword = "12345";
+    private final int expectedCodeForOk = 200;
+    private final int expectedCodeForSetOver = 202;
+    private final int expectedCodeForTest = 401;
 
     @Before
     public void setUp() {
         // повторяющуюся для разных ручек часть URL лучше записать в переменную в методе Before
         // если в классе будет несколько тестов, указывать её придётся только один раз
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
+        RestAssured.baseURI = AdressClass.baseAdress;
         LoginUser loginUser = new LoginUser(email, password, name);
         token = given()
                 .header("Content-type", "application/json")
                 .and()
                 .body(loginUser)
                 .when()
-                .post("/api/auth/register")
+                .post(AdressClass.regUrl)
                 .then()
                 .log().all()
-                .statusCode(200)
+                .statusCode(expectedCodeForOk)
                 .extract()
                 .body()
                 .path("accessToken");
@@ -42,13 +48,12 @@ public class UserAuthTest {
 
     @After
     public void setOver() {
-        token = token.replace("Bearer ", "");
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
-                        .delete("/api/auth/user");
-        response.then().statusCode(202);
+                        .oauth2(token.replace("Bearer ", ""))
+                        .delete(AdressClass.regUser);
+        response.then().statusCode(expectedCodeForSetOver);
     }
 
     @Test
@@ -61,10 +66,10 @@ public class UserAuthTest {
                 given()
                         .header("Content-type", "application/json")
                         .body(loginUser)
-                        .post("/api/auth/login");
+                        .post(AdressClass.regLogin);
         response.then().assertThat().body("success", equalTo(true))
                 .and()
-                .statusCode(200);
+                .statusCode(expectedCodeForOk);
     }
 
     @Test
@@ -72,15 +77,15 @@ public class UserAuthTest {
     @Description("User - login on API with email, Incorrect password") // описание теста
     public void userIncorrectPassAuthTest() {
         // перед началом теста необходимо заполнение уникальными значениями для login password name
-        LoginUser loginUser = new LoginUser(email, "12345");
+        LoginUser loginUser = new LoginUser(email, unCorrectPassword);
         Response response =
                 given()
                         .header("Content-type", "application/json")
                         .body(loginUser)
-                        .post("/api/auth/login");
+                        .post(AdressClass.regLogin);
         response.then().assertThat().body("success", equalTo(false))
                 .and()
-                .statusCode(401);
+                .statusCode(expectedCodeForTest);
     }
 
     @Test
@@ -88,15 +93,15 @@ public class UserAuthTest {
     @Description("User - login on API with Incorrect email,  correct password") // описание теста
     public void userIncorrectEmailAuthTest() {
         // перед началом теста необходимо заполнение уникальными значениями для login password name
-        LoginUser loginUser = new LoginUser("timba@mail.com", password);
+        LoginUser loginUser = new LoginUser(unCorrectEmail, password);
         Response response =
                 given()
                         .header("Content-type", "application/json")
                         .body(loginUser)
-                        .post("/api/auth/login");
+                        .post(AdressClass.regLogin);
         response.then().assertThat().body("success", equalTo(false))
                 .and()
-                .statusCode(401);
+                .statusCode(expectedCodeForTest);
     }
 
     @Test
@@ -104,16 +109,15 @@ public class UserAuthTest {
     @Description("User - login on API with Incorrect email, Incorrect password") // описание теста
     public void userIncorrectAllAuthTest() {
         // перед началом теста необходимо заполнение уникальными значениями для login password name
-        LoginUser loginUser = new LoginUser("timba1@mail.com", "123456");
+        LoginUser loginUser = new LoginUser(unCorrectEmail, unCorrectPassword);
         Response response =
                 given()
                         .header("Content-type", "application/json")
                         .body(loginUser)
-                        .post("/api/auth/login");
+                        .post(AdressClass.regLogin);
         response.then().assertThat().body("success", equalTo(false))
                 .and()
-                .statusCode(401);
+                .statusCode(expectedCodeForTest);
     }
 }
-
 

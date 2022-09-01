@@ -5,6 +5,7 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import praktikum.AdressClass;
 import praktikum.LoginUser;
 import praktikum.CreateOrder;
 
@@ -17,40 +18,43 @@ public class UserOrderListTest {
 
     String token;
     Random random = new Random();
-    String email = "something" + random.nextInt(10000000) + "@yandex.ru";
-    String password = "aaa" + random.nextInt(10000000);
-    String name = "uuu" + random.nextInt(10000000);
+    private final String email = "something" + random.nextInt(10000000) + "@yandex.ru";
+    private final String password = "aaa" + random.nextInt(10000000);
+    private final String name = "uuu" + random.nextInt(10000000);
+    private final String ingredientsReal = "61c0c5a71d1f82001bdaaa6d";
+    private final int expectedCodeForOk = 200;
+    private final int expectedCodeForSetOver = 202;
+    private final int expectedCodeForTest = 401;
+
 
     @Before
     public void setUp() {
         // повторяющуюся для разных ручек часть URL лучше записать в переменную в методе Before
         // если в классе будет несколько тестов, указывать её придётся только один раз
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
+        RestAssured.baseURI = AdressClass.baseAdress;
         LoginUser loginUser = new LoginUser(email, password, name);
-        CreateOrder createOrder = new CreateOrder("61c0c5a71d1f82001bdaaa6d");
+        CreateOrder createOrder = new CreateOrder(ingredientsReal);
         token = given()
                 .header("Content-type", "application/json")
                 .and()
                 .body(loginUser)
                 .when()
-                .post("/api/auth/register")
+                .post(AdressClass.regUrl)
                 .then()
                 .log().all()
-                .statusCode(200)
+                .statusCode(expectedCodeForOk)
                 .extract()
                 .body()
                 .path("accessToken");
 
-        token = token.replace("Bearer ", "");
         given()
-
                 .auth()
-                .oauth2(token)
+                .oauth2(token.replace("Bearer ", ""))
                 .headers("Content-Type", "application/json")
                 .body(createOrder)
-                .post("/api/orders")
+                .post(AdressClass.regOrders)
                 .then()
-                .statusCode(200);
+                .statusCode(expectedCodeForOk);
     }
 
     @After
@@ -58,9 +62,9 @@ public class UserOrderListTest {
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
-                        .delete("/api/auth/user");
-        response.then().statusCode(202);
+                        .oauth2(token.replace("Bearer ", ""))
+                        .delete(AdressClass.regUser);
+        response.then().statusCode(expectedCodeForSetOver);
     }
 
     @Test
@@ -70,12 +74,12 @@ public class UserOrderListTest {
         Response response =
                 given()
                         .auth()
-                        .oauth2(token)
+                        .oauth2(token.replace("Bearer ", ""))
                         .headers("Content-Type", "application/json")
-                        .get("/api/orders");
+                        .get(AdressClass.regOrders);
         response.then().assertThat().body("success", equalTo(true))
                 .and()
-                .statusCode(200);
+                .statusCode(expectedCodeForOk);
     }
 
     @Test
@@ -85,10 +89,10 @@ public class UserOrderListTest {
         Response response =
                 given()
                         .headers("Content-Type", "application/json")
-                        .get("/api/orders");
+                        .get(AdressClass.regOrders);
         response.then().assertThat().body("success", equalTo(false))
                 .and()
-                .statusCode(401);
+                .statusCode(expectedCodeForTest);
     }
 }
 

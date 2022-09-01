@@ -8,3 +8,4 @@ public class AdressClass {
     public static String regOrders = "/api/orders";
     public static String regLogin = "/api/auth/login";
 }
+
