@@ -6,45 +6,37 @@ import org.junit.Before;
 import org.junit.Test;
 import praktikum.AdressClass;
 import praktikum.LoginUser;
-import praktikum.CreateOrder;
 
 import java.util.Random;
 
-
-public class UserOrderListTest {
+public class LoginUserDoubleRegTest {
 
     Random random = new Random();
     private final String email = "something" + random.nextInt(10000000) + "@yandex.ru";
     private final String password = "aaa" + random.nextInt(10000000);
     private final String name = "uuu" + random.nextInt(10000000);
-    private final String ingredients = "61c0c5a71d1f82001bdaaa6d";
+    LoginUser loginUser = new LoginUser(email, password, name);
+
 
     @Before
     public void setUp() {
         // повторяющуюся для разных ручек часть URL лучше записать в переменную в методе Before
         // если в классе будет несколько тестов, указывать её придётся только один раз
         RestAssured.baseURI = AdressClass.baseUrl;
-        LoginUser.userRegCreateTwoVar(email, password, name);
-        CreateOrder.createOrderWithToken(email, password, ingredients);
+        LoginUser.setUserUp(loginUser);
     }
 
     @After
     public void setOver() {
-        LoginUser.setUserEndWOTokenIn(email, password);
+        LoginUser loginUser = new LoginUser(email, password);
+        LoginUser.setUserEnd(loginUser);
     }
 
     @Test
-    @DisplayName("userOrderListTestWithToken") // имя теста
-    @Description("OrderList - get on API with accessToken") // описание теста
-    public void userOrderListTestWithToken() {
-        CreateOrder.userOrderListTestWithToken(email, password);
-    }
-
-    @Test
-    @DisplayName("userOrderListTestWOToken") // имя теста
-    @Description("OrderList - get on API with out accessToken") // описание теста
-    public void userOrderListTestWOToken() {
-        CreateOrder.userOrderListWOToken();
+    @DisplayName("loginUserDoubleRegTest") // имя теста
+    @Description("User - Create, doubles request on API with email, password and name") // описание теста
+    public void loginUserDoubleRegTest() {
+        // перед началом теста необходимо заполнение уникальными значениями для login password name
+        LoginUser.userRegDoubleCreate(loginUser);
     }
 }
-
