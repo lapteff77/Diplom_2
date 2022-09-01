@@ -6,6 +6,10 @@ public class LoginUser {
     private String password;
     private String name;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop2
     public LoginUser(String email, String password, String name) {
         this.email = email;
         this.password = password;
@@ -17,6 +21,10 @@ public class LoginUser {
         this.password = password;
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop2
     public String getEmail() {
         return email;
     }
